@@ -2,8 +2,8 @@
 // Settings > App Settings > (your Web app)
 export const config = {
   apiKey: "6c30e0b3-6ded-45c8-9a8d-7eadbb065447",
-  // TODO: paste the "SDK Endpoint" shown in the dashboard, e.g. "sdk.iad-01.braze.com"
-  baseUrl: "YOUR-SDK-ENDPOINT-HERE",
+  // SDK Endpoint from the dashboard
+  baseUrl: "sdk.fra-02.braze.eu",
   // Verbose SDK logs in the browser console — turn off for production
   enableLogging: true,
   // Show a dashed placeholder where a banner placement has no active campaign

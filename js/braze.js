@@ -31,7 +31,9 @@ export function init(userId) {
   sdk.initialize(config.apiKey, {
     baseUrl: config.baseUrl,
     enableLogging: config.enableLogging,
-    allowUserSuppliedJavascript: false,
+    // Required for Banners (and HTML in-app messages): lets HTML/JS authored in
+    // the Braze dashboard run on this site. Only dashboard users can author it.
+    allowUserSuppliedJavascript: true,
   });
   log("braze.initialize", { baseUrl: config.baseUrl });
 

@@ -60,7 +60,12 @@ Las cuentas se guardan en `localStorage` (email → `user_<uuid>`). Sin contrase
 
 La app se suscribe con `subscribeToBannersUpdates`, pide los 5 placements con un solo `requestBannersRefresh`
 (al cargar, al registrarse y al hacer login) y pinta cada slot `[data-placement]` con `insertBanner`, que registra
-impresiones y clics automáticamente. Si un placement no tiene campaña activa se ve un recuadro punteado
+impresiones y clics automáticamente.
+
+> Los banners **requieren** `allowUserSuppliedJavascript: true` en `braze.initialize` (está en `js/braze.js`).
+> Sin esa opción el SDK descarga el banner pero no lo pinta y muestra *"Banners are disabled"* en la consola.
+
+Si un placement no tiene campaña activa se ve un recuadro punteado
 (desactivable con `showBannerPlaceholders: false`).
 
 ## Puesta en marcha
