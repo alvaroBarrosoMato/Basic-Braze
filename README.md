@@ -1,51 +1,82 @@
 # Braze Test Shop
 
-A tiny web storefront for trying out the [Braze Web SDK](https://www.braze.com/docs/developer_guide/sdk_integration) (v6.13).
-Plain HTML/CSS/JS — no build step, no dependencies.
+Tienda web de prueba para el [SDK web de Braze](https://www.braze.com/docs/developer_guide/sdk_integration) (v6.13).
+HTML/CSS/JS sin build ni dependencias.
 
-## What it does with Braze
+## Estructura
 
-| Feature | Braze SDK calls |
+```
+index.html        header, menú de categorías, slots de banner globales, diálogos
+styles.css
+js/config.js      API key, SDK endpoint, placements de banners, moneda
+js/catalog.js     categorías, subcategorías y productos (con variantes)
+js/braze.js       TODAS las llamadas al SDK de Braze
+js/app.js         router (#/...), vistas, carrito, login/registro
+```
+
+Páginas: inicio, categoría / subcategoría, ficha de producto, búsqueda, carrito, checkout y confirmación de pedido.
+
+## Eventos (eCommerce recommended events)
+
+Siguen el esquema de [Braze eCommerce recommended events](https://www.braze.com/docs/user_guide/data/activation/events/recommended_events#ecommerce-recommended-events)
+y se envían con `braze.logEcommerceEvent({ name, properties })` (Web SDK ≥ 6.8).
+
+| Acción | Evento | Notas |
+|---|---|---|
+| Ver ficha de producto (o cambiar de variante) | `ecommerce.product_viewed` | `product_id`, `product_name`, `variant_id`, `price`, `currency`, `source`, `product_url` |
+| Añadir / quitar / cambiar cantidad / eliminar | `ecommerce.cart_updated` | Modo *full replacement*: siempre se envía el carrito completo con cantidades absolutas (sin `action`) |
+| Entrar al checkout | `ecommerce.checkout_started` | `checkout_id`, `cart_id`, `total_value`, `subtotal_value`, `shipping`, `metadata.checkout_url` |
+| Realizar pedido | `ecommerce.order_placed` | `order_id`, `cart_id`, totales, `products[]`, `metadata.order_status_url` |
+
+- Se usa el mismo `cart_id` en cart → checkout → order. Tras un pedido se crea un carrito nuevo.
+- `source` es `"web"` y la moneda `EUR` (se cambian en `js/config.js`).
+- **No** se llama a `braze.logPurchase`: es el evento legacy (en modo mantenimiento) y `ecommerce.order_placed`
+  ya actualiza `total_revenue` / `total_orders`; usar ambos duplicaría ingresos.
+- `ecommerce.order_cancelled` / `order_refunded` no aplican (no hay backend de pedidos).
+
+Eventos no‑eCommerce (custom events): `signed_up`, `logged_in`, `logged_out`, `product_searched` (`query`, `results_count`).
+
+## Usuarios
+
+| Estado | Qué hace |
 |---|---|
-| Anonymous visitor | `braze.initialize` → `braze.openSession` (no `changeUser`, so Braze tracks an anonymous user) |
-| Sign up | `changeUser(userId)`, `setFirstName`, `setLastName`, `setEmail`, `setEmailNotificationSubscriptionType`, custom attribute `signup_date`, custom event `signed_up` |
-| Log in | `changeUser(userId)`, custom event `logged_in` |
-| Log out | custom event `logged_out`, then `wipeData()` + reload → new anonymous user |
-| Add / remove from cart | custom events `added_to_cart` / `removed_from_cart` (props: `product_id`, `product_name`, `price`, `currency`), custom attributes `cart_item_count`, `cart_value` |
-| Checkout | custom event `checkout_started`, one `logPurchase` per product, custom event `checkout_completed` |
-| Banner | `subscribeToBannersUpdates` → `requestBannersRefresh(["my_first_banner"])` → `getBanner` + `insertBanner` |
-| In-app messages | `automaticallyShowInAppMessages()` |
+| Anónimo | `initialize` → `openSession` sin `changeUser` |
+| Registro | `changeUser(userId)` + nombre, apellidos, email, suscripción email, `signup_date`. La actividad anónima previa se fusiona en el perfil |
+| Login | `changeUser(userId)` |
+| Logout | `wipeData()` + recarga → nuevo usuario anónimo |
+| Compra como invitado | `setEmail` en el perfil anónimo |
 
-When a user signs up, the anonymous activity from before (cart events, etc.) is merged into their new profile.
-The page's **Braze activity** panel lists every SDK call as it happens.
+Las cuentas se guardan en `localStorage` (email → `user_<uuid>`). Sin contraseñas ni backend: es una demo.
 
-> Accounts are stored in the browser's `localStorage` (email → user ID). There's no real backend or password — it's a demo.
-> External IDs are random `user_<uuid>` values; Braze recommends not using emails as external IDs.
+## Banners
 
-## Setup
+| Placement ID | Dónde aparece |
+|---|---|
+| `home_top` | Arriba en la página de inicio |
+| `search_top` | Arriba en la página de búsqueda |
+| `cart_banner` | Arriba en el carrito |
+| `checkout_banner` | Arriba en el checkout |
+| `my_first_banner` | En todas las páginas, encima del footer |
 
-1. Open `config.js` and set `baseUrl` to your **SDK Endpoint** from the Braze dashboard
-   (Settings → App Settings → your Web app), e.g. `sdk.iad-01.braze.com`.
-2. Serve the folder (any static server works):
+La app se suscribe con `subscribeToBannersUpdates`, pide los 5 placements con un solo `requestBannersRefresh`
+(al cargar, al registrarse y al hacer login) y pinta cada slot `[data-placement]` con `insertBanner`, que registra
+impresiones y clics automáticamente. Si un placement no tiene campaña activa se ve un recuadro punteado
+(desactivable con `showBannerPlaceholders: false`).
+
+## Puesta en marcha
+
+1. En `js/config.js`, pon en `baseUrl` el **SDK Endpoint** de tu dashboard (Settings → App Settings), p. ej. `sdk.fra-02.braze.eu`.
+2. Sirve la carpeta (hace falta un servidor por los módulos ES):
 
    ```bash
    python3 -m http.server 8080
    ```
 
-3. Open http://localhost:8080.
+3. Abre http://localhost:8080. El botón **Braze log** (abajo a la derecha) muestra cada llamada al SDK y su payload;
+   las que el SDK rechaza salen en rojo.
 
-## Showing the banner
+## Comprobar datos en Braze
 
-1. In Braze, go to **Messaging → Banners** and confirm the placement `my_first_banner` exists
-   (Settings → Banner Placements).
-2. Create a Banner campaign using that placement, target your users (or everyone), and launch it.
-3. Reload the page — the banner renders at the top. Edit the campaign in the dashboard and the page picks it up
-   on the next refresh (page load, sign up, or log in), no code changes needed.
-
-Braze logs banner impressions and clicks automatically because the page uses `insertBanner`.
-
-## Checking data in Braze
-
-- **Users → User Search**: look up a user by email or external ID to see attributes, custom events and purchases.
-- **Settings → Custom Events / Purchases**: new event names appear after the first time they're logged.
-- Open the browser console: `enableLogging: true` in `config.js` prints the SDK's own logs.
+- **Audience → Search Users**: busca por email o external ID para ver atributos y eventos.
+- **Data Settings → Custom Events / eCommerce**: los nombres aparecen tras enviarse la primera vez.
+- Con `enableLogging: true` la consola del navegador muestra los logs internos del SDK.

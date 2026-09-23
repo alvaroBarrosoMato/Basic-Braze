@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,91 +7,84 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">Braze Test Shop</div>
-    <div class="user-area">
-      <span id="user-status" class="pill">Anonymous</span>
-      <button id="btn-open-login" class="btn ghost">Log in</button>
-      <button id="btn-open-signup" class="btn">Sign up</button>
-      <button id="btn-logout" class="btn ghost" hidden>Log out</button>
+  <header class="site-header">
+    <div class="header-main">
+      <button id="btn-menu" class="icon-btn menu-toggle" aria-label="Menú" aria-controls="menu" aria-expanded="false">☰</button>
+      <a class="brand" href="#/">Braze Test Shop</a>
+      <form id="header-search" class="header-search" data-search role="search">
+        <input type="search" name="q" placeholder="Buscar productos…" aria-label="Buscar productos" />
+      </form>
+      <div class="user-area">
+        <span id="user-status" class="pill">👤 Anónimo</span>
+        <button id="btn-open-login" class="btn ghost" data-open="dlg-login">Entrar</button>
+        <button id="btn-open-signup" class="btn" data-open="dlg-signup">Registrarse</button>
+        <button id="btn-logout" class="btn ghost" hidden>Salir</button>
+        <a class="cart-link" href="#/cart" aria-label="Carrito">🛒<span id="cart-count" class="badge" hidden>0</span></a>
+      </div>
     </div>
+    <nav id="menu" class="cat-menu" aria-label="Categorías">
+      <ul id="cat-nav"></ul>
+    </nav>
   </header>
 
   <div id="config-warning" class="warning" hidden>
-    The SDK endpoint is not set. Open <code>config.js</code> and set <code>baseUrl</code>
-    to the SDK Endpoint from your Braze dashboard.
+    El SDK Endpoint no está configurado. Abre <code>js/config.js</code> y pon en <code>baseUrl</code>
+    el SDK Endpoint de tu dashboard de Braze.
   </div>
 
-  <!-- Braze Banner: placement "my_first_banner". Content is managed in the Braze dashboard. -->
-  <section class="banner-wrap">
-    <div id="banner-container"></div>
-    <p id="banner-empty" class="muted small">
-      No banner yet for placement <code>my_first_banner</code>. Launch a Banner campaign in Braze to see it here.
-    </p>
-  </section>
+  <main id="view" class="container"></main>
 
-  <main class="layout">
-    <section>
-      <h2>Products</h2>
-      <div id="products" class="grid"></div>
-    </section>
+  <!-- Global banner, shown on every page -->
+  <div class="container"><div class="banner-slot" data-placement="my_first_banner"></div></div>
 
-    <aside class="side">
-      <div class="card">
-        <h2>Cart</h2>
-        <ul id="cart-items" class="cart"></ul>
-        <p id="cart-empty" class="muted">Your cart is empty.</p>
-        <div class="cart-total">Total: <strong id="cart-total">$0.00</strong></div>
-        <button id="btn-checkout" class="btn full" disabled>Checkout</button>
-      </div>
+  <footer class="site-footer">
+    <div class="container muted small">Tienda de prueba · Braze Web SDK 6.13</div>
+  </footer>
 
-      <div class="card">
-        <h2>Braze activity</h2>
-        <p class="muted small">Every call made to the Braze SDK on this page.</p>
-        <ol id="event-log" class="log"></ol>
-      </div>
-    </aside>
-  </main>
+  <!-- Braze activity drawer -->
+  <button id="btn-log" class="log-toggle">Braze log <span id="log-count" class="badge">0</span></button>
+  <aside id="log-drawer" class="log-drawer" aria-label="Actividad de Braze">
+    <div class="drawer-head">
+      <strong>Llamadas al SDK de Braze</strong>
+      <button class="icon-btn" onclick="this.closest('.log-drawer').classList.remove('open')" aria-label="Cerrar">✕</button>
+    </div>
+    <ol id="event-log" class="log"></ol>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- Auth dialogs -->
   <dialog id="dlg-signup">
-    <form id="form-signup" method="dialog">
-      <h2>Sign up</h2>
-      <label>First name <input name="firstName" required /></label>
-      <label>Last name <input name="lastName" /></label>
+    <form id="form-signup" method="dialog" class="form">
+      <h2>Crear cuenta</h2>
+      <div class="form-row">
+        <label>Nombre <input name="firstName" required /></label>
+        <label>Apellidos <input name="lastName" /></label>
+      </div>
       <label>Email <input name="email" type="email" required /></label>
-      <label class="check"><input name="marketing" type="checkbox" /> Email me offers</label>
-      <p class="muted small">Demo only — no password or real backend.</p>
+      <label class="check"><input name="marketing" type="checkbox" /> Quiero recibir ofertas por email</label>
+      <p class="muted small">Demo: sin contraseña ni backend real.</p>
       <div class="row">
-        <button type="button" class="btn ghost" data-close>Cancel</button>
-        <button type="submit" class="btn">Create account</button>
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn">Crear cuenta</button>
       </div>
     </form>
   </dialog>
 
   <dialog id="dlg-login">
-    <form id="form-login" method="dialog">
-      <h2>Log in</h2>
+    <form id="form-login" method="dialog" class="form">
+      <h2>Iniciar sesión</h2>
       <label>Email <input name="email" type="email" required /></label>
       <p id="login-error" class="error small" hidden></p>
       <div class="row">
-        <button type="button" class="btn ghost" data-close>Cancel</button>
-        <button type="submit" class="btn">Log in</button>
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn">Entrar</button>
       </div>
     </form>
   </dialog>
 
-  <dialog id="dlg-thanks">
-    <form method="dialog">
-      <h2>Order placed 🎉</h2>
-      <p id="thanks-text"></p>
-      <div class="row"><button class="btn">Close</button></div>
-    </form>
-  </dialog>
-
-  <script src="config.js"></script>
-  <!-- Braze Web SDK from the Braze CDN (version pinned to your dashboard's 6.13) -->
+  <!-- Braze Web SDK from the Braze CDN (6.13 = your dashboard's version) -->
   <script src="https://js.appboycdn.com/web-sdk/6.13/braze.min.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
