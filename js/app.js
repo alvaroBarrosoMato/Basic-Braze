@@ -523,6 +523,23 @@ document.addEventListener("change", (e) => {
   }
 });
 
+// ---------- Exit intent ----------
+// Desktop only: the pointer leaves the page through the top edge (towards the
+// tabs / address bar / close button). Logged only if the cart has items, and
+// at most once per minute so we don't spam events while the user moves around.
+const EXIT_INTENT_COOLDOWN_MS = 60 * 1000;
+let lastExitIntent = 0;
+
+if (window.matchMedia("(pointer: fine)").matches) {
+  document.addEventListener("mouseout", (e) => {
+    if (e.relatedTarget || e.clientY > 0) return; // still inside the page, or not leaving through the top
+    if (cartCount() === 0) return;
+    if (Date.now() - lastExitIntent < EXIT_INTENT_COOLDOWN_MS) return;
+    lastExitIntent = Date.now();
+    Braze.exitIntentWithCart(cart, totals(), cartCount());
+  });
+}
+
 // ---------- Boot ----------
 if (!Braze.ready) $("#config-warning").hidden = false;
 renderMenu();

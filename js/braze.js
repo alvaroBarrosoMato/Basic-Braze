@@ -197,6 +197,21 @@ export function searched(query, resultsCount) {
   log("braze.logCustomEvent · product_searched", props, ok);
 }
 
+// Exit intent with items in the cart. Use it as the "Perform Custom Event"
+// trigger of an in-app message campaign (triggers are evaluated in the browser,
+// so the message can show right away without waiting for a flush).
+export function exitIntentWithCart(cart, totals, itemCount) {
+  const props = {
+    cart_item_count: itemCount,
+    cart_value: totals.total,
+    currency: CURRENCY,
+    cart_id: cart.id,
+    page: location.hash || "#/",
+  };
+  const ok = ready ? sdk.logCustomEvent("exit_intent_with_cart", props) : false;
+  log("braze.logCustomEvent · exit_intent_with_cart", props, ok);
+}
+
 // ---------- Banners ----------
 const ALL_PLACEMENTS = Object.values(PLACEMENTS);
 

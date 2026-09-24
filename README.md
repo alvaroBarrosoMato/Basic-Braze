@@ -36,6 +36,18 @@ y se envían con `braze.logEcommerceEvent({ name, properties })` (Web SDK ≥ 6.
 
 Eventos no‑eCommerce (custom events): `signed_up`, `logged_in`, `logged_out`, `product_searched` (`query`, `results_count`).
 
+### Exit intent con carrito
+
+`exit_intent_with_cart` se envía cuando el ratón sale de la página por el borde superior (hacia las
+pestañas o la barra de direcciones) **y** el carrito tiene al menos un producto. Propiedades:
+`cart_item_count`, `cart_value`, `currency`, `cart_id`, `page`.
+
+- Solo en escritorio (dispositivos con ratón); en móvil no existe ese gesto.
+- Como máximo una vez por minuto por pestaña.
+- Para mostrar un mensaje: campaña de in-app message → *Schedule Delivery* → *Action-Based* →
+  *Perform Custom Event* → `exit_intent_with_cart`. Tras lanzar la campaña, recarga la web para que el SDK
+  descargue el nuevo trigger.
+
 ## Usuarios
 
 | Estado | Qué hace |
