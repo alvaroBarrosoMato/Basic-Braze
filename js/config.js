@@ -8,6 +8,8 @@ export const config = {
   enableLogging: true,
   // Show a dashed placeholder where a banner placement has no active campaign
   showBannerPlaceholders: true,
+  // Shop API (catalogue, users, orders in Databricks). "" = same origin (/api on Vercel or dev_server.py)
+  apiBase: "",
 };
 
 // Banner placements created in Braze (Settings > Banner Placements)

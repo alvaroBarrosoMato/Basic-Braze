@@ -15,7 +15,7 @@
         <input type="search" name="q" placeholder="Buscar productos…" aria-label="Buscar productos" />
       </form>
       <div class="user-area">
-        <span id="user-status" class="pill">👤 Anónimo</span>
+        <a id="user-status" class="pill">👤 Anónimo</a>
         <button id="btn-open-login" class="btn ghost" data-open="dlg-login">Entrar</button>
         <button id="btn-open-signup" class="btn" data-open="dlg-signup">Registrarse</button>
         <button id="btn-logout" class="btn ghost" hidden>Salir</button>
@@ -32,7 +32,7 @@
     el SDK Endpoint de tu dashboard de Braze.
   </div>
 
-  <main id="view" class="container"></main>
+  <main id="view" class="container"><p class="muted">Cargando catálogo desde Databricks…</p></main>
 
   <!-- Global banner, shown on every page -->
   <div class="container"><div class="banner-slot" data-placement="my_first_banner"></div></div>
@@ -63,7 +63,8 @@
       </div>
       <label>Email <input name="email" type="email" required /></label>
       <label class="check"><input name="marketing" type="checkbox" /> Quiero recibir ofertas por email</label>
-      <p class="muted small">Demo: sin contraseña ni backend real.</p>
+      <p id="signup-error" class="error small" hidden></p>
+      <p class="muted small">Demo: sin contraseña. Tu cuenta se guarda en Databricks.</p>
       <div class="row">
         <button type="button" class="btn ghost" data-close>Cancelar</button>
         <button type="submit" class="btn">Crear cuenta</button>
