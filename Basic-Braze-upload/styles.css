@@ -224,6 +224,49 @@ a.pill[href]:hover { text-decoration: none; border-color: var(--ok); }
 .link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; }
 .link.danger { color: var(--danger); font-size: 0.85rem; }
 
+/* ---------- Content Cards as floating notifications ----------
+   Braze injects .ab-feed > .ab-feed-body > .ab-card into #content-cards.
+   The #content-cards prefix outranks Braze's own stylesheet. */
+.cc-stack {
+  position: fixed; top: 128px; right: 16px; z-index: 35;
+  width: min(340px, calc(100vw - 32px)); max-height: calc(100vh - 210px);
+  overflow-y: auto; scrollbar-width: none;
+  pointer-events: none; /* clicks pass through the empty space between cards */
+}
+.cc-stack::-webkit-scrollbar { display: none; }
+#content-cards .ab-feed {
+  position: static !important; width: 100% !important; height: auto !important; max-height: none !important;
+  margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important; overflow: visible !important;
+  font-family: inherit;
+}
+#content-cards .ab-feed-buttons-wrapper,
+#content-cards .ab-no-cards-message,
+#content-cards .ab-unread-indicator { display: none !important; }
+#content-cards .ab-feed-body {
+  padding: 0 !important; margin: 0 !important; border: 0 !important;
+  background: transparent !important; overflow: visible !important;
+}
+#content-cards .ab-card {
+  pointer-events: auto; position: relative;
+  width: 100% !important; margin: 0 0 12px !important;
+  border-radius: 14px !important; overflow: hidden; border: 1px solid var(--border) !important;
+  background: var(--card) !important; box-shadow: var(--shadow) !important;
+  animation: cc-in 0.35s ease both;
+}
+#content-cards .ab-card .ab-image-area img { display: block; width: 100%; max-height: 160px; object-fit: cover; }
+#content-cards .ab-card .ab-card-body { padding: 12px 40px 14px 14px !important; }
+#content-cards .ab-card .ab-title { color: var(--text) !important; font-size: 0.98rem !important; line-height: 1.3; margin: 0 0 4px !important; font-family: inherit !important; }
+#content-cards .ab-card .ab-description { color: var(--muted) !important; font-size: 0.88rem !important; font-family: inherit !important; }
+#content-cards .ab-card .ab-url-area a { color: var(--accent) !important; font-weight: 600; }
+#content-cards .ab-card .ab-close-button {
+  position: absolute; top: 8px; right: 8px; z-index: 2; width: 26px; height: 26px; padding: 6px;
+  border-radius: 50%; background: rgba(0, 0, 0, 0.45) !important; opacity: 1 !important; cursor: pointer;
+}
+#content-cards .ab-card .ab-close-button svg { width: 100%; height: 100%; fill: #fff !important; }
+@keyframes cc-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #content-cards .ab-card { animation: none; } }
+
 /* ---------- Log drawer, toast, dialogs ---------- */
 .log-toggle {
   position: fixed; right: 16px; bottom: 16px; z-index: 40;
@@ -283,4 +326,7 @@ dialog h2 { margin-top: 0; }
   .cart-lines .link.danger { grid-column: 3; justify-self: end; }
   .form-row { flex-direction: column; }
   .toast { bottom: 76px; }
+  /* Phones: stack at the bottom, above the Braze log button */
+  .cc-stack { top: auto; bottom: 72px; right: 16px; left: 16px; width: auto; max-height: 45vh; }
+  #content-cards .ab-card .ab-image-area img { max-height: 110px; }
 }

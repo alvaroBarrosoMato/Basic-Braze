@@ -51,6 +51,30 @@ export function init(userId) {
 
   sdk.openSession(); // always last
   log("braze.openSession", { user: userId || "anonymous" });
+
+  showContentCards(document.getElementById("content-cards"));
+}
+
+// ---------- Content Cards ----------
+// Braze renders the cards into our own container (instead of its default slide-in
+// panel) and keeps them updated; it also logs impressions, clicks and dismissals.
+// styles.css turns the feed into floating notifications.
+let lastCardCount = -1;
+function showContentCards(container) {
+  if (!container) return;
+  sdk.showContentCards(container);
+  sdk.subscribeToContentCardsUpdates((updates) => {
+    const count = updates.cards.filter((c) => !c.isControl).length;
+    container.classList.toggle("has-cards", count > 0);
+    if (count !== lastCardCount) log("Content Cards", { cards: count });
+    lastCardCount = count;
+  });
+  log("braze.showContentCards", { container: `#${container.id}` });
+}
+
+function refreshContentCards() {
+  sdk.requestContentCardsRefresh(); // cards are per user: fetch the new user's after changeUser
+  log("braze.requestContentCardsRefresh");
 }
 
 export function signUp({ userId, firstName, lastName, email, zipCode, marketing }) {
@@ -70,6 +94,7 @@ export function signUp({ userId, firstName, lastName, email, zipCode, marketing 
   log("braze.changeUser + atributos de perfil", { userId, firstName, lastName, email, zip_code: zipCode, marketing });
   log("braze.logCustomEvent · signed_up", { method: "email" }, ok);
   refreshBanners(); // banners are targeted per user
+  refreshContentCards();
 }
 
 export function logIn(userId) {
@@ -80,6 +105,7 @@ export function logIn(userId) {
   log("braze.changeUser", { userId });
   log("braze.logCustomEvent · logged_in", undefined, ok);
   refreshBanners();
+  refreshContentCards();
 }
 
 // Braze can't turn an identified user back into an anonymous one: flush, wipe

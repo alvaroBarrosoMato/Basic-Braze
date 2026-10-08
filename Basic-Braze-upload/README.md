@@ -129,6 +129,13 @@ impresiones y clics automáticamente.
 Si un placement no tiene campaña activa se ve un recuadro punteado
 (desactivable con `showBannerPlaceholders: false`).
 
+## Content Cards
+
+Se muestran como **notificaciones flotantes** a la derecha (abajo en móvil), sin panel ni fondo:
+`braze.showContentCards(#content-cards)` pinta las tarjetas en ese contenedor y las mantiene actualizadas
+(impresiones, clics y descartes los registra el SDK). El aspecto se controla en `styles.css` (sección *Content Cards*).
+Tras registrarse o iniciar sesión se llama a `requestContentCardsRefresh()` porque las tarjetas son por usuario.
+
 ## Puesta en marcha
 
 ### 1. Databricks
