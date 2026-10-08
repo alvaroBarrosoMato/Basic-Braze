@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Braze Test Shop</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-main">
+      <button id="btn-menu" class="icon-btn menu-toggle" aria-label="Menú" aria-controls="menu" aria-expanded="false">☰</button>
+      <a class="brand" href="#/">Braze Test Shop</a>
+      <form id="header-search" class="header-search" data-search role="search">
+        <input type="search" name="q" placeholder="Buscar productos…" aria-label="Buscar productos" />
+      </form>
+      <div class="user-area">
+        <a id="user-status" class="pill">👤 Anónimo</a>
+        <button id="btn-open-login" class="btn ghost" data-open="dlg-login">Entrar</button>
+        <button id="btn-open-signup" class="btn" data-open="dlg-signup">Registrarse</button>
+        <button id="btn-logout" class="btn ghost" hidden>Salir</button>
+        <a class="cart-link" href="#/cart" aria-label="Carrito">🛒<span id="cart-count" class="badge" hidden>0</span></a>
+      </div>
+    </div>
+    <nav id="menu" class="cat-menu" aria-label="Categorías">
+      <ul id="cat-nav"></ul>
+    </nav>
+  </header>
+
+  <div id="config-warning" class="warning" hidden>
+    El SDK Endpoint no está configurado. Abre <code>js/config.js</code> y pon en <code>baseUrl</code>
+    el SDK Endpoint de tu dashboard de Braze.
+  </div>
+
+  <main id="view" class="container"><p class="muted">Cargando catálogo desde Databricks…</p></main>
+
+  <!-- Global banner, shown on every page -->
+  <div class="container"><div class="banner-slot" data-placement="my_first_banner"></div></div>
+
+  <footer class="site-footer">
+    <div class="container muted small">Tienda de prueba · Braze Web SDK 6.13</div>
+  </footer>
+
+  <!-- Braze activity drawer -->
+  <button id="btn-log" class="log-toggle">Braze log <span id="log-count" class="badge">0</span></button>
+  <aside id="log-drawer" class="log-drawer" aria-label="Actividad de Braze">
+    <div class="drawer-head">
+      <strong>Llamadas al SDK de Braze</strong>
+      <button class="icon-btn" onclick="this.closest('.log-drawer').classList.remove('open')" aria-label="Cerrar">✕</button>
+    </div>
+    <ol id="event-log" class="log"></ol>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Auth dialogs -->
+  <dialog id="dlg-signup">
+    <form id="form-signup" method="dialog" class="form">
+      <h2>Crear cuenta</h2>
+      <div class="form-row">
+        <label>Nombre <input name="firstName" required /></label>
+        <label>Apellidos <input name="lastName" /></label>
+      </div>
+      <label>Email <input name="email" type="email" required /></label>
+      <label class="check"><input name="marketing" type="checkbox" /> Quiero recibir ofertas por email</label>
+      <p id="signup-error" class="error small" hidden></p>
+      <p class="muted small">Demo: sin contraseña. Tu cuenta se guarda en Databricks.</p>
+      <div class="row">
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn">Crear cuenta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-login">
+    <form id="form-login" method="dialog" class="form">
+      <h2>Iniciar sesión</h2>
+      <label>Email <input name="email" type="email" required /></label>
+      <p id="login-error" class="error small" hidden></p>
+      <div class="row">
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Braze Web SDK from the Braze CDN (6.13 = your dashboard's version) -->
+  <script src="https://js.appboycdn.com/web-sdk/6.13/braze.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
