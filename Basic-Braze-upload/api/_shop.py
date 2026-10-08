@@ -6,8 +6,10 @@ Used by api/index.py on Vercel and by dev_server.py locally.
 Routes
   GET  /api/health                 checks the Databricks connection
   GET  /api/catalog                categories, subcategories, products + variants
-  POST /api/users/signup           {email, firstName, lastName, marketing}
+  POST /api/users/signup           {email, firstName, lastName, zipCode, marketing}
   POST /api/users/login            {email}
+  GET  /api/users/<user_id>        profile
+  POST /api/users/<user_id>        update profile {email, firstName, lastName, zipCode, marketing}
   GET  /api/users/<user_id>/orders order history
   POST /api/orders                 {userId?, email, firstName, lastName, address, city, zip,
                                     shippingMethod, cartId, checkoutId, items: [{productId, variantId, qty}]}
@@ -63,6 +65,16 @@ def _email(body):
     return email
 
 
+ZIP_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 -]{1,9}$")
+
+
+def _zip(body):
+    value = _text(body, "zipCode", 10)
+    if value and not ZIP_RE.match(value):
+        raise ApiError(400, "Código postal no válido")
+    return value or None
+
+
 def _iso(ts):
     # Databricks returns "2026-09-24T10:00:00.000Z" / "2026-09-24 10:00:00"
     return ts.replace(" ", "T") if ts else None
@@ -74,12 +86,14 @@ def _user_json(row):
         "email": row["email"],
         "firstName": row["first_name"] or "",
         "lastName": row["last_name"] or "",
+        "zipCode": row.get("zip_code") or "",
         "marketing": _bool(row["email_marketing_opt_in"]),
         "createdAt": _iso(row["created_at"]),
+        "updatedAt": _iso(row.get("updated_at")),
     }
 
 
-USER_COLS = "user_id, email, first_name, last_name, email_marketing_opt_in, created_at"
+USER_COLS = "user_id, email, first_name, last_name, zip_code, email_marketing_opt_in, created_at, updated_at"
 
 
 # ---------- catalogue ----------
@@ -145,15 +159,18 @@ def signup(body):
         "email": email,
         "first_name": _text(body, "firstName", 100, required=True),
         "last_name": _text(body, "lastName", 100),
+        "zip_code": _zip(body),
         "email_marketing_opt_in": bool(body.get("marketing")),
         "created_at": now,
     }
     db.execute(
-        """INSERT INTO users (user_id, email, first_name, last_name, email_marketing_opt_in, created_at, last_login_at)
-           VALUES (:user_id, :email, :first_name, :last_name, :email_marketing_opt_in, :created_at, :created_at)""",
+        """INSERT INTO users (user_id, email, first_name, last_name, zip_code, email_marketing_opt_in,
+                              created_at, last_login_at, updated_at)
+           VALUES (:user_id, :email, :first_name, :last_name, :zip_code, :email_marketing_opt_in,
+                   :created_at, :created_at, :created_at)""",
         row,
     )
-    return _user_json({**row, "created_at": now.isoformat()})
+    return _user_json({**row, "created_at": now.isoformat(), "updated_at": now.isoformat()})
 
 
 def login(body):
@@ -162,6 +179,43 @@ def login(body):
         raise ApiError(404, "No hay ninguna cuenta con ese email. Regístrate primero.")
     db.execute("UPDATE users SET last_login_at = :now WHERE user_id = :user_id", {"now": _now(), "user_id": user["user_id"]})
     return _user_json(user)
+
+
+def _get_user_row(user_id):
+    rows = db.execute(f"SELECT {USER_COLS} FROM users WHERE user_id = :user_id LIMIT 1", {"user_id": user_id})
+    if not rows:
+        raise ApiError(404, "User not found")
+    return rows[0]
+
+
+def get_user(user_id):
+    return _user_json(_get_user_row(user_id))
+
+
+def update_user(user_id, body):
+    current = _get_user_row(user_id)
+    email = _email(body)
+    if email != current["email"]:
+        other = _find_user(email)
+        if other and other["user_id"] != user_id:
+            raise ApiError(409, "Ese email ya lo usa otra cuenta.")
+    now = _now()
+    row = {
+        "user_id": user_id,
+        "email": email,
+        "first_name": _text(body, "firstName", 100, required=True),
+        "last_name": _text(body, "lastName", 100),
+        "zip_code": _zip(body),
+        "email_marketing_opt_in": bool(body.get("marketing")),
+        "updated_at": now,
+    }
+    db.execute(
+        """UPDATE users SET email = :email, first_name = :first_name, last_name = :last_name, zip_code = :zip_code,
+                            email_marketing_opt_in = :email_marketing_opt_in, updated_at = :updated_at
+           WHERE user_id = :user_id""",
+        row,
+    )
+    return _user_json({**row, "created_at": current["created_at"], "updated_at": now.isoformat()})
 
 
 def _user_exists(user_id):
@@ -341,6 +395,8 @@ ROUTES = [
     ("POST", r"/api/users/signup", lambda m, b: signup(b)),
     ("POST", r"/api/users/login", lambda m, b: login(b)),
     ("GET", r"/api/users/(?P<id>[\w-]{1,100})/orders", lambda m, b: list_user_orders(m["id"])),
+    ("GET", r"/api/users/(?P<id>[\w-]{1,100})", lambda m, b: get_user(m["id"])),
+    ("POST", r"/api/users/(?P<id>[\w-]{1,100})", lambda m, b: update_user(m["id"], b)),
     ("POST", r"/api/orders", lambda m, b: create_order(b)),
     ("GET", r"/api/orders/(?P<id>[\w-]{1,100})", lambda m, b: get_order(m["id"])),
 ]

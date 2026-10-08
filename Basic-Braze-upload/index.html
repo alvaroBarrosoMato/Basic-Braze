@@ -4,6 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Braze Test Shop</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="img/favicon-512.png" />
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -61,7 +64,10 @@
         <label>Nombre <input name="firstName" required /></label>
         <label>Apellidos <input name="lastName" /></label>
       </div>
-      <label>Email <input name="email" type="email" required /></label>
+      <div class="form-row">
+        <label>Email <input name="email" type="email" required /></label>
+        <label>Código postal <input name="zipCode" maxlength="10" inputmode="numeric" /></label>
+      </div>
       <label class="check"><input name="marketing" type="checkbox" /> Quiero recibir ofertas por email</label>
       <p id="signup-error" class="error small" hidden></p>
       <p class="muted small">Demo: sin contraseña. Tu cuenta se guarda en Databricks.</p>

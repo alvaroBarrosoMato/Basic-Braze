@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS users (
   email_marketing_opt_in BOOLEAN,
   created_at TIMESTAMP NOT NULL,
   last_login_at TIMESTAMP,
+  zip_code STRING,
+  updated_at TIMESTAMP,
   CONSTRAINT users_pk PRIMARY KEY (user_id)
 );
 

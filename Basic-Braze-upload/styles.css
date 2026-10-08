@@ -203,6 +203,9 @@ input:not([type="checkbox"]):not([type="radio"]) {
 a.pill[href] { cursor: pointer; }
 a.pill[href]:hover { text-decoration: none; border-color: var(--ok); }
 .form-error { margin: 0; }
+.account-card { margin-bottom: 8px; }
+.account-card h2 { margin-bottom: 12px; }
+.profile-actions { justify-content: space-between; align-items: center; flex-wrap: wrap; }
 @media (max-width: 860px) {
   .order-list li { grid-template-columns: 1fr auto; gap: 4px 12px; }
 }

@@ -41,7 +41,8 @@ vercel.json             rewrite /api/* → api/index.py
 ```
 
 Páginas: inicio, categoría / subcategoría, ficha de producto, búsqueda, carrito, checkout, confirmación de pedido
-y **Mis pedidos** (`#/account`, clic en tu nombre).
+y **Mi cuenta** (`#/account`, clic en tu nombre): editar nombre, apellidos, email, código postal y opt-in
+(se guarda en `users` y se copia al perfil de Braze) + historial de pedidos.
 
 ## Modelo de datos (Databricks)
 
@@ -51,7 +52,7 @@ y **Mis pedidos** (`#/account`, clic en tu nombre).
 | `subcategories` | `subcategory_id` → `categories` | Subcategorías |
 | `products` | `product_id` → `categories`, `subcategories` | Nombre, descripción, `price DECIMAL(10,2)`, `currency`, `is_active` |
 | `product_variants` | `variant_id` → `products` | Tallas/colores. `variant_id` = `product_id-variant_code`, el mismo que se envía a Braze |
-| `users` | `user_id` | Clientes registrados. **`user_id` es el `external_id` de Braze** |
+| `users` | `user_id` | Clientes registrados: email, nombre, apellidos, `zip_code`, opt-in de email, `updated_at`. **`user_id` es el `external_id` de Braze** |
 | `orders` | `order_id` → `users` | Cabecera: datos de envío, totales, `status`, `cart_id`, `checkout_id`. `user_id` NULL = invitado |
 | `order_items` | (`order_id`, `line_number`) → `orders`, `products`, `product_variants` | Líneas con nombre y precio copiados en el momento de la compra |
 
@@ -77,7 +78,10 @@ y se envían con `braze.logEcommerceEvent({ name, properties })` (Web SDK ≥ 6.
 - `ecommerce.order_placed` usa el `order_id` y los totales que devuelve la API (los mismos que quedan en `orders`).
 - `ecommerce.order_cancelled` / `order_refunded` no se envían (la tienda no tiene cancelaciones ni devoluciones).
 
-Eventos no‑eCommerce (custom events): `signed_up`, `logged_in`, `logged_out`, `product_searched` (`query`, `results_count`).
+Eventos no‑eCommerce (custom events): `signed_up`, `logged_in`, `logged_out`, `product_searched` (`query`, `results_count`),
+`profile_updated` (`changed_fields`).
+
+Atributo personalizado: `zip_code` (código postal, al registrarse y al editar el perfil).
 
 ### Exit intent con carrito
 

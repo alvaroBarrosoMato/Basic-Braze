@@ -38,6 +38,24 @@ def run_file(name):
         db.execute(stmt)
 
 
+# Columns added after the first release. CREATE TABLE IF NOT EXISTS doesn't touch
+# existing tables, so add them here for workspaces created with an older version.
+NEW_COLUMNS = {
+    "users": {"zip_code": "STRING", "updated_at": "TIMESTAMP"},
+}
+
+
+def add_missing_columns():
+    for table, columns in NEW_COLUMNS.items():
+        existing = {r["column_name"] for r in db.execute(
+            "SELECT column_name FROM information_schema.columns WHERE table_schema = :schema AND table_name = :table",
+            {"schema": db.target()[1], "table": table})}
+        missing = {c: t for c, t in columns.items() if c not in existing}
+        if missing:
+            print(f"  ALTER TABLE {table} ADD COLUMNS {', '.join(missing)}")
+            db.execute(f"ALTER TABLE {table} ADD COLUMNS ({', '.join(f'{c} {t}' for c, t in missing.items())})")
+
+
 def main():
     load_dotenv()
     catalog, schema = db.target()
@@ -48,6 +66,7 @@ def main():
 
     print("Creating tables…")
     run_file("01_tables.sql")
+    add_missing_columns()
 
     if "--reseed" in sys.argv:
         print("Wiping catalogue tables…")
@@ -63,6 +82,9 @@ def main():
 
     print("Adding table comments…")
     run_file("03_comments.sql")
+
+    print("Creating Braze Catalog view…")
+    run_file("04_braze_catalog_view.sql")
 
     for table in ("categories", "subcategories", "products", "product_variants", "users", "orders", "order_items"):
         n = db.execute(f"SELECT COUNT(*) AS n FROM {table}")[0]["n"]

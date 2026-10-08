@@ -6,6 +6,7 @@
 Then open http://localhost:8080
 """
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -29,7 +30,9 @@ def use_fake_databricks():
     lock = threading.Lock()
 
     def to_sqlite(sql):
-        return sql.replace("TIMESTAMP '", "'")  # SQLite has no TIMESTAMP '...' literal
+        sql = sql.replace("TIMESTAMP '", "'")  # SQLite has no TIMESTAMP '...' literal
+        # SQLite gives a "STRING" column numeric affinity ("08002" -> 8002); TEXT keeps it as typed
+        return re.sub(r"\bSTRING\b", "TEXT", sql)
 
     def execute(sql, params=None, catalog_schema=None):
         values = {}

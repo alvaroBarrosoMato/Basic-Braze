@@ -53,7 +53,7 @@ export function init(userId) {
   log("braze.openSession", { user: userId || "anonymous" });
 }
 
-export function signUp({ userId, firstName, lastName, email, marketing }) {
+export function signUp({ userId, firstName, lastName, email, zipCode, marketing }) {
   if (!ready) return;
   // Anonymous activity so far is merged into this new profile
   sdk.changeUser(userId);
@@ -63,10 +63,11 @@ export function signUp({ userId, firstName, lastName, email, marketing }) {
   user.setEmail(email);
   const types = sdk.User.NotificationSubscriptionTypes;
   user.setEmailNotificationSubscriptionType(marketing ? types.OPTED_IN : types.SUBSCRIBED);
+  if (zipCode) user.setCustomUserAttribute("zip_code", zipCode);
   user.setCustomUserAttribute("signup_date", new Date());
   const ok = sdk.logCustomEvent("signed_up", { method: "email" });
   sdk.requestImmediateDataFlush();
-  log("braze.changeUser + atributos de perfil", { userId, firstName, lastName, email, marketing });
+  log("braze.changeUser + atributos de perfil", { userId, firstName, lastName, email, zip_code: zipCode, marketing });
   log("braze.logCustomEvent · signed_up", { method: "email" }, ok);
   refreshBanners(); // banners are targeted per user
 }
@@ -96,6 +97,25 @@ export function logOut(onDone) {
   log("braze.logCustomEvent · logged_out", undefined, ok);
   sdk.requestImmediateDataFlush(finish);
   setTimeout(finish, 1500); // in case the flush callback never fires
+}
+
+// Profile edited on the account page: mirror the Databricks users row on the Braze profile.
+// `before` is the previous profile, so only real changes are sent.
+export function updateProfile(before, after) {
+  const changed = ["firstName", "lastName", "email", "zipCode", "marketing"].filter((k) => before[k] !== after[k]);
+  if (!ready || changed.length === 0) return;
+  const user = sdk.getUser();
+  const types = sdk.User.NotificationSubscriptionTypes;
+  if (changed.includes("firstName")) user.setFirstName(after.firstName);
+  if (changed.includes("lastName")) user.setLastName(after.lastName);
+  if (changed.includes("email")) user.setEmail(after.email);
+  if (changed.includes("zipCode")) user.setCustomUserAttribute("zip_code", after.zipCode || null);
+  // Unticking the box on the profile page is an explicit opt-out
+  if (changed.includes("marketing")) user.setEmailNotificationSubscriptionType(after.marketing ? types.OPTED_IN : types.UNSUBSCRIBED);
+  const ok = sdk.logCustomEvent("profile_updated", { changed_fields: changed.join(",") });
+  sdk.requestImmediateDataFlush();
+  log("braze.getUser() · atributos actualizados", Object.fromEntries(changed.map((k) => [k === "zipCode" ? "zip_code" : k, after[k]])));
+  log("braze.logCustomEvent · profile_updated", { changed_fields: changed.join(",") }, ok);
 }
 
 // Guest checkout: attach the email to the current (possibly anonymous) profile
